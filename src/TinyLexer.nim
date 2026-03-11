@@ -17,17 +17,14 @@ proc setSource*(lexer: var Lexer, source: string) = ## Used to set the source fo
 proc addToken(lexer: var Lexer, tokenType: TokenType) = ## addToken procs to create tokens and then add it to the token sequence
     lexer.tokens.add(newToken(lexer.lineCount, tokenType))
 
-proc addToken(lexer: var Lexer, tokenType: TokenType, value: string) = ## Adds STRING or VAR token to lexer tokens sequence
-    if tokenType == STRING or tokenType == VAR:
-        lexer.tokens.add(newToken(lexer.lineCount, tokenType, value))
-    else:
-        echo "Error in lexer"
+proc addToken(lexer: var Lexer, tokenType: TokenType, STRvalue: string) = ## Adds STRING token to lexer tokens sequence
+    lexer.tokens.add(newToken(lexer.lineCount, tokenType, STRvalue))
+
+proc addToken(lexer: var Lexer, tokenType: TokenType, name: char) = ## Adds VAR token to lexer tokens sequence
+    lexer.tokens.add(newToken(lexer.lineCount, tokenType, name))
 
 proc addToken(lexer: var Lexer, tokenType: TokenType, INTvalue: int) = ## Adds DIGIT token to lexer tokens sequence
-    if tokenType == DIGIT:
-        lexer.tokens.add(newToken(lexer.lineCount, tokenType, INTvalue))
-    else:
-        echo "Error in lexer"
+    lexer.tokens.add(newToken(lexer.lineCount, tokenType, INTvalue))
 
 
 proc atEnd(lexer: Lexer): bool = ## Checks if lexer is at the end of the file
@@ -50,7 +47,7 @@ proc scanString(lexer: var Lexer) =
         echo "Error unfinished string"
 
     lexer.advance()
-    lexer.addToken(STRING, lexer.source[lexer.startPos .. lexer.currentPos])
+    lexer.addToken(STRING, lexer.source[lexer.startPos+1 .. lexer.currentPos-2])
 
 
 proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the source
@@ -68,9 +65,25 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
     of '/':
         lexer.addToken(DIVIDE)
     of '<':
-        lexer.addToken(LESS)
+        case lexer.peek:
+        of '>':
+            lexer.advance
+            lexer.addToken(NOTEQUAL)
+        of '=':
+            lexer.advance
+            lexer.addToken(LESSEQUAL)
+        else:
+            lexer.addToken(LESS)
     of '>':
-        lexer.addToken(GREATER)
+        case lexer.peek:
+        of '<':
+            lexer.advance
+            lexer.addToken(NOTEQUAL)
+        of '=':
+            lexer.advance
+            lexer.addToken(GREATEREQUAL)
+        else:
+            lexer.addToken(GREATER)
     of '=':
         lexer.addToken(EQUAL)
     of ',':
@@ -82,7 +95,10 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
     else:
         if isDigit(c):
             lexer.addToken(DIGIT, int(c))
-        lexer.addToken(STRING, lexer.source)
+        elif isUpperAscii(c):
+            lexer.addToken(VAR, c)
+        else:
+            echo "Error in tokenizing"
 
 proc scanTokens*(lexer: var Lexer): seq[Token] {.discardable.} = ## Loops through the source and scans all tokens
     while(not lexer.atEnd()):

@@ -1,14 +1,14 @@
 type
     TokenType* = enum ## Different possible token types
         PRINT, IF, GOTO, INPUT, LET, GOSUB, RETURN, CLEAR, LIST, RUN, END
-        PLUS, MINUS, TIMES, DIVIDE, LESS, GREATER, EQUAL, COMMA
+        PLUS, MINUS, TIMES, DIVIDE, LESS, GREATER, EQUAL, COMMA, GREATEREQUAL, LESSEQUAL, NOTEQUAL
         VAR, DIGIT, STRING
         EOF, EOL
     Token* = object ## Token object that stores relevant info
         lineNum: int
         case tokenType: TokenType
         of VAR:
-            name: string
+            name: char
         of DIGIT:
             INTvalue: int
         of STRING:
@@ -20,13 +20,11 @@ type
 proc newToken* (lineNum: int, tokenType: TokenType): Token = ## Generic newToken procedure that creates and returns a token
     return Token(lineNum: lineNum, tokenType: tokenType)
 
-proc newToken* (lineNum: int, tokenType: TokenType, value: string): Token = ## String type newToken procedure that creates and returns either a VAR or STRING token
-    if tokenType == VAR:
-        return Token(lineNum: lineNum, tokenType: VAR, name: value)
-    elif tokenType == STRING:
-        return Token(lineNum: lineNum, tokenType: STRING, STRvalue: value)
-    else:
-        echo "Error in token"
+proc newToken* (lineNum: int, tokenType: TokenType, STRvalue: string): Token = ## String type newToken procedure that creates and returns a STRING token
+    return Token(lineNum: lineNum, tokenType: STRING, STRvalue: STRvalue)
+
+proc newToken* (lineNum: int, tokenType: TokenType, name: char): Token = ## String type newToken procedure that creates and returns a VAR token
+    return Token(lineNum: lineNum, tokenType: VAR, name: name)
 
 proc newToken* (lineNum: int, tokenType: TokenType, INTvalue: int): Token = ## Integer type newToken procecdure that creates and returns a DIGIT token
     return Token(lineNum: lineNum, tokenType: DIGIT, INTvalue: INTvalue)
