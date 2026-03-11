@@ -11,11 +11,4 @@ if args.len > 1:
 elif args.len == 1:
     runFile(args[0])
 else:
-    while (true):
-        stdout.write("> ")
-        source = readLine(stdin)
-
-        if (source == "" or source == "exit"):
-            break
-
-        runLine(source)
+    runLine()
