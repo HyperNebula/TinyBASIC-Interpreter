@@ -49,6 +49,39 @@ proc scanString(lexer: var Lexer) =
     lexer.advance()
     lexer.addToken(STRING, lexer.source[lexer.startPos+1 .. lexer.currentPos-2])
 
+proc scanIdentifier(lexer: var Lexer) =
+    while (not lexer.atEnd and isAlphaAscii(lexer.peek)):
+        lexer.advance()
+
+    let text: string = lexer.source[lexer.startPos .. lexer.currentPos-1]
+    echo text
+    case text:
+    of "PRINT", "print":
+        lexer.addToken(PRINT)
+    of "IF", "if":
+        lexer.addToken(IF)
+    of "THEN", "then":
+        lexer.addToken(THEN)
+    of "GOTO", "goto":
+        lexer.addToken(GOTO)
+    of "INPUT", "input":
+        lexer.addToken(INPUT)
+    of "LET", "let":
+        lexer.addToken(LET)
+    of "GOSUB", "gosub":
+        lexer.addToken(GOSUB)
+    of "RETURN", "return":
+        lexer.addToken(RETURN)
+    of "CLEAR", "clear":
+        lexer.addToken(CLEAR)
+    of "LIST", "list":
+        lexer.addToken(LIST)
+    of "RUN", "run":
+        lexer.addToken(RUN)
+    of "END", "end":
+        lexer.addToken(END)
+    else:
+        echo "ERROR in ID tokenizing"
 
 proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the source
     let c: char = lexer.advance()
@@ -94,9 +127,11 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
         lexer.scanString()
     else:
         if isDigit(c):
-            lexer.addToken(DIGIT, int(c))
-        elif isUpperAscii(c):
+            lexer.addToken(DIGIT, parseInt($c))
+        elif isUpperAscii(c) and not isUpperAscii(lexer.peek):
             lexer.addToken(VAR, c)
+        elif isAlphaAscii(c):
+            lexer.scanIdentifier()
         else:
             echo "Error in tokenizing"
 

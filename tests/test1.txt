@@ -2,3 +2,6 @@
 "How are you"s
 <=>=<>><=
 123
+LET THEN PRINT
+print gosub
+end bob
