@@ -7,6 +7,7 @@ var
 
 proc run(line: string) =
     lexer.setSource(line)
+    lexer.scanTokens()
 
     lexer.print()
 
