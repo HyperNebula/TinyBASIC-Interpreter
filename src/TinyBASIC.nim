@@ -2,7 +2,7 @@ import std/strutils
 
 import TinyLexer
 
-var 
+var
     lexer: TinyLexer.Lexer = TinyLexer.Lexer()
 
 proc run(line: string) =
@@ -11,8 +11,7 @@ proc run(line: string) =
     lexer.print()
 
 proc runFile*(fileName: string) =
-    for l in splitLines(readFile(fileName)):
-        run(l)
+    run(readFile(fileName))
 
 proc runLine*() =
     while (true):
