@@ -1,5 +1,5 @@
 "Hello"+A -="Worlds">
-"How are you"
+"How are you" #
 <=>=<>><=
 123
 LET THEN PRINT
