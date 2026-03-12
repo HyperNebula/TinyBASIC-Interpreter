@@ -1,7 +1,7 @@
 "Hello"+A -="Worlds">
-"How are you" #
+"How are you" &
 <=>=<>><=
-123
+123 BBob
 LET THEN PRINT
 print gosub
 end

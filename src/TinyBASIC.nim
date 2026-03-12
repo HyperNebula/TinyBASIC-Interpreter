@@ -1,15 +1,15 @@
-import TinyLexer
-from Token import UnknownTokenException
+import TinyLexer, Error
 
 var
+    errorBag: seq[Error]
     lexer: TinyLexer.Lexer = TinyLexer.Lexer()
 
 proc run(source: string) =
     lexer.setSource(source)
     lexer.scanTokens()
 
-    if (lexer.hasError):
-        return
+    #if (lexer.hasError):
+    #    return
 
     lexer.print()
 

@@ -21,6 +21,7 @@ proc setSource*(lexer: var Lexer, source: string) = ## Used to set the source fo
     lexer.linePos = 0
     lexer.hasError = false
 
+
 proc addToken(lexer: var Lexer, tokenType: TokenType) = ## addToken procs to create tokens and then add it to the token sequence
     lexer.tokens.add(newToken(lexer.lineCount, tokenType))
 
@@ -32,6 +33,10 @@ proc addToken(lexer: var Lexer, tokenType: TokenType, name: char) = ## Adds VAR 
 
 proc addToken(lexer: var Lexer, tokenType: TokenType, INTvalue: int) = ## Adds DIGIT token to lexer tokens sequence
     lexer.tokens.add(newToken(lexer.lineCount, tokenType, INTvalue))
+
+proc addToken(lexer: var Lexer, tokenType: TokenType, content: string, linePos: int) = ## Adds StringERROR or UnknownERROR tokens to lexer tokens sequence
+    lexer.hasError = true # move this to parser eventually
+    lexer.tokens.add(newToken(lexer.lineCount, tokenType, content, linePos))
 
 
 proc atEnd(lexer: Lexer): bool = ## Checks if lexer is at the end of the file
@@ -52,9 +57,8 @@ proc scanString(lexer: var Lexer) = ## Tokenizes strings contained within quotat
         lexer.advance()
 
     if lexer.atEnd:
-        raise UnknownTokenException.newException("Unterminated string [$3] at line $1, position $2" %
-            [$lexer.lineCount, $(lexer.linePos - (lexer.currentPos - lexer.startPos) + 1),
-                multiReplace($lexer.source[lexer.startPos .. lexer.currentPos-1], (Newlines, '\0'))])
+        lexer.addToken(StringERROR, multiReplace($lexer.source[lexer.startPos .. lexer.currentPos-1], (Newlines, '\0')), lexer.linePos - (lexer.currentPos - lexer.startPos) + 1)
+        return
 
     lexer.advance()
     lexer.addToken(STRING, lexer.source[lexer.startPos+1 .. lexer.currentPos-2])
@@ -90,8 +94,9 @@ proc scanIdentifier(lexer: var Lexer) =
     of "END", "end":
         lexer.addToken(END)
     else:
-        raise UnknownTokenException.newException("Unknown token [$3] at line $1, position $2" %
-            [$lexer.lineCount, $(lexer.linePos - (lexer.currentPos - lexer.startPos) + 1), $text])
+        lexer.addToken(UnknownERROR, text, lexer.linePos - (lexer.currentPos - lexer.startPos) + 1)
+        #raise UnknownTokenException.newException("Unknown token [$3] at line $1, position $2" %
+        #    [$lexer.lineCount, $(lexer.linePos - (lexer.currentPos - lexer.startPos) + 1), $text])
 
 proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the source
     let c: char = lexer.advance()
@@ -144,17 +149,14 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
         elif isAlphaAscii(c):
             lexer.scanIdentifier()
         else:
-            raise UnknownTokenException.newException("Unknown token [$3] at line $1, position $2" %
-                [$lexer.lineCount, $lexer.linePos, $c])
+            lexer.addToken(UnknownERROR, $c, lexer.linePos)
+            #raise UnknownTokenException.newException("Unknown token [$3] at line $1, position $2" %
+            #    [$lexer.lineCount, $lexer.linePos, $c])
 
 proc scanTokens*(lexer: var Lexer): seq[Token] {.discardable.} = ## Loops through the source and scans all tokens
     while(not lexer.atEnd()):
         lexer.startPos = lexer.currentPos
-        try:
-            lexer.scanToken()
-        except UnknownTokenException as e:
-            lexer.hasError = true
-            echo "Error: (", e.name, ") ", e.msg
+        lexer.scanToken()
 
     #lexer.tokens.add(newToken(lexer.lineCount + 1, EOF))
     return lexer.tokens

@@ -4,6 +4,7 @@ type
         PLUS, MINUS, TIMES, DIVIDE, LESS, GREATER, EQUAL, COMMA, GREATEREQUAL, LESSEQUAL, NOTEQUAL
         VAR, DIGIT, STRING
         EOF, EOL
+        UnknownERROR, StringERROR
     Token* = object ## Token object that stores relevant info
         lineNum: int
         case tokenType: TokenType
@@ -13,6 +14,9 @@ type
             INTvalue: int
         of STRING:
             STRvalue: string
+        of StringERROR, UnknownERROR:
+            content: string
+            linePos: int
         else:
             discard
     UnknownTokenException* = object of CatchableError
@@ -30,6 +34,12 @@ proc newToken* (lineNum: int, tokenType: TokenType, name: char): Token = ## Stri
 proc newToken* (lineNum: int, tokenType: TokenType, INTvalue: int): Token = ## Integer type newToken procecdure that creates and returns a DIGIT token
     return Token(lineNum: lineNum, tokenType: DIGIT, INTvalue: INTvalue)
 
+proc newToken* (lineNum: int, tokenType: TokenType, content: string, linePos: int): Token = ## Integer type newToken procecdure that creates and returns a DIGIT token
+    if tokenType == StringERROR:
+        return Token(lineNum: lineNum, tokenType: StringERROR, content: content, linePos: linePos)
+    else:
+        return Token(lineNum: lineNum, tokenType: UnknownERROR, content: content, linePos: linePos)
+
 # proc to convert tokens to strings
 proc `$`* (token: Token): string =
     var content: string = ": "
@@ -41,6 +51,8 @@ proc `$`* (token: Token): string =
         content.add $token.INTvalue
     of STRING:
         content.add token.STRvalue
+    of StringERROR, UnknownERROR:
+        content.add "Error (" & token.content & ") at position " & $token.linePos
     else:
         content = ""
     return "[" & $token.lineNum & "] " & $token.tokenType & content
