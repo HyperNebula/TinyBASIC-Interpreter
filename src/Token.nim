@@ -15,6 +15,7 @@ type
             STRvalue: string
         else:
             discard
+    UnknownTokenException* = object of CatchableError
 
 
 proc newToken* (lineNum: int, tokenType: TokenType): Token = ## Generic newToken procedure that creates and returns a token

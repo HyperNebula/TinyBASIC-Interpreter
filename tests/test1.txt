@@ -1,7 +1,8 @@
 "Hello"+A -="Worlds">
-"How are you"s
+"How are you"
 <=>=<>><=
 123
 LET THEN PRINT
 print gosub
-end bob
+end
+"Hello

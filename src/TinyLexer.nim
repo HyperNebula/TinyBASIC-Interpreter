@@ -8,7 +8,9 @@ type
         lineCount: int = 1
         currentPos: int = 0
         startPos: int = 0
+        linePos: int = 0
         tokens: seq[Token]
+
 
 proc setSource*(lexer: var Lexer, source: string) = ## Used to set the source for the lexer
     lexer.source = source
@@ -32,6 +34,7 @@ proc atEnd(lexer: Lexer): bool = ## Checks if lexer is at the end of the file
 
 proc advance(lexer: var Lexer): char {.discardable.} = ## Advances the lexer by one character and returns the next character
     lexer.currentPos.inc
+    lexer.linePos.inc
     return lexer.source[lexer.currentPos - 1]
 
 proc peek(lexer: Lexer): char = ## looks at the next character without
@@ -39,12 +42,14 @@ proc peek(lexer: Lexer): char = ## looks at the next character without
         return '\0'
     return lexer.source[lexer.currentPos]
 
-proc scanString(lexer: var Lexer) =
+proc scanString(lexer: var Lexer) = ## Tokenizes strings contained within quotation marks
     while (not lexer.atEnd and lexer.peek != '"'):
         lexer.advance()
 
     if lexer.atEnd:
-        echo "Error unfinished string"
+        raise UnknownTokenException.newException("Error: Unterminated string [$3] at line $1, position $2" %
+            [$lexer.lineCount, $(lexer.linePos - (lexer.currentPos - lexer.startPos) + 1),
+                multiReplace($lexer.source[lexer.startPos .. lexer.currentPos-1], (Newlines, '\0'))])
 
     lexer.advance()
     lexer.addToken(STRING, lexer.source[lexer.startPos+1 .. lexer.currentPos-2])
@@ -54,7 +59,6 @@ proc scanIdentifier(lexer: var Lexer) =
         lexer.advance()
 
     let text: string = lexer.source[lexer.startPos .. lexer.currentPos-1]
-    echo text
     case text:
     of "PRINT", "print":
         lexer.addToken(PRINT)
@@ -81,7 +85,8 @@ proc scanIdentifier(lexer: var Lexer) =
     of "END", "end":
         lexer.addToken(END)
     else:
-        echo "ERROR in ID tokenizing"
+        raise UnknownTokenException.newException("Error: Unknown token [$3] at line $1, position $2" %
+            [$lexer.lineCount, $(lexer.linePos - (lexer.currentPos - lexer.startPos) + 1), $text])
 
 proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the source
     let c: char = lexer.advance()
@@ -89,6 +94,7 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
     of '\n':
         lexer.addToken(EOL)
         lexer.lineCount.inc
+        lexer.linePos = 0
     of '+':
         lexer.addToken(PLUS)
     of '-':
@@ -133,7 +139,8 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
         elif isAlphaAscii(c):
             lexer.scanIdentifier()
         else:
-            echo "Error in tokenizing"
+            raise UnknownTokenException.newException("Error: Unknown token [$3] at line $1, position $2" %
+                [$lexer.lineCount, $lexer.linePos, $c])
 
 proc scanTokens*(lexer: var Lexer): seq[Token] {.discardable.} = ## Loops through the source and scans all tokens
     while(not lexer.atEnd()):
