@@ -10,7 +10,7 @@ proc run(source: string) =
     lexer.print()
 
     parser.setTokenList(tokens)
-    parser.AST.add parser.parseStatement()
+    parser.parseTokens()
     parser.print()
 
 

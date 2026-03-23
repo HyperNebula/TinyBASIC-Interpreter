@@ -42,8 +42,9 @@ proc handleEOL(parser: var Parser) =
     parser.advance()
 
 proc continueUntilEOL(parser: var Parser) =
-    while (not parser.checkMatch(EOL)):
+    while (not parser.checkMatch(EOL, EOF)):
         parser.advance()
+    parser.advance()
 
 
 proc parseString(parser: var Parser): ASTNode =
@@ -55,8 +56,8 @@ proc parseExpression(parser: var Parser): ASTNode =
 proc parseEXPRList(parser: var Parser): seq[ASTNode] =
     parser.advance()
     if (parser.checkMatch(COMMA)):
+        parser.advance()
         if (parser.checkMatch(STRING)):
-            parser.advance()
             return @[ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)] & parser.parseEXPRList()
         elif (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
             return @[parser.parseExpression()] & parser.parseEXPRList()
@@ -83,13 +84,24 @@ proc parsePrint(parser: var Parser): ASTNode =
          parser.continueUntilEOL()
          return ASTNode(nodeKIND: nodeERROR)
 
-proc parseStatement*(parser: var Parser): ASTNode =
-    var returnAstNode: ASTNode
-    if (parser.checkMatch(PRINT)):
+proc parseStatement(parser: var Parser): ASTNode =
+    var returnAstNode: ASTNode = ASTNode(nodeKind: nodeERROR)
+    if (parser.checkMatch(EOL)):
+        parser.advance()
+        return ASTNode(nodeKind: nodeEOL)
+    elif (parser.checkMatch(PRINT)):
         return parser.parsePrint()
 
     parser.handleEOL()
     return returnAstNode
+
+proc parseTokens*(parser: var Parser): seq[ASTNode] {.discardable.} =
+    var returnSeq: seq[ASTNode]
+    while (not parser.atEnd()):
+        returnSeq.add parser.parseStatement()
+
+    parser.AST = returnSeq
+    return returnSeq
 
 
 proc print*(parser: Parser) = ## Prints all ASTNodes stored in the Parser.AST sequence

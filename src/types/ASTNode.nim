@@ -7,7 +7,7 @@ type
         nodeVAR, nodeNUMBER, nodeSTRING
         nodePRINT, nodeIF, nodeGOTO, nodeINPUT, nodeLET, nodeGOSUB, nodeRETURN, nodeCLEAR, nodeLIST, nodeRUN, nodeEND
         nodeUNARY, nodeBINARY
-        nodeERROR
+        nodeEOL, nodeERROR
 
     ASTNode* = ref object
         case nodeKind*: NodeKind
@@ -41,7 +41,7 @@ type
             letVAR*: ASTNode # of nodeVAR
             letEXPR*: AstNode
 
-        of nodeRETURN, nodeCLEAR, nodeLIST, nodeRUN, nodeEND, nodeERROR:
+        of nodeRETURN, nodeCLEAR, nodeLIST, nodeRUN, nodeEND, nodeERROR, nodeEOL:
             discard
 
 proc `$`* (opKind: OperatorKind): string =

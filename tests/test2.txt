@@ -1,1 +1,4 @@
 PRINT "BOB", "HELLO"
+
+PRINT "hi
+PRINT *
