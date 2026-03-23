@@ -9,7 +9,4 @@ type
 proc setTokenList*(parser: var Parser, tokens: seq[Token]) =
     parser.tokens = tokens
 
-proc testPrint*(): string =
-    let testExpression: ASTNode = ASTNode(nodeKind: nodeNumber, INTvalue: 5)
-
-    return $testExpression
+    

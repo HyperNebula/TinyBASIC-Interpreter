@@ -71,21 +71,21 @@ proc `$`* (astNode: ASTNode): string =
 
     case astNode.nodeKind:
     of nodeNUMBER:
-        content.add $astNode.INTvalue
+        return $astNode.INTvalue
     of nodeSTRING:
-        content.add astNode.STRvalue
+        return astNode.STRvalue
     of nodeVAR:
-        content.add astNode.VARname
+        return $astNode.VARname
 
     of nodeBINARY:
-        content.add ($astNode.binLeft & $astNode.binOP & $astNode.binRIGHT)
+        return ($astNode.binLeft & " " & $astNode.binOP & " " & $astNode.binRIGHT)
     of nodeUNARY:
-        content.add ($astNode.unOP & $astNode.unOPERAND)
+        return ($astNode.unOP & $astNode.unOPERAND)
 
     of nodePRINT:
         content.add $astNode.EXPRlist
     of nodeIF:
-        content.add ($astNode.condEXPRleft & $astNode.condRELOP & $astNode.condEXPRright & " THEN " & $astNode.condStatement)
+        content.add ($astNode.condEXPRleft & " " & $astNode.condRELOP & " " & $astNode.condEXPRright & " THEN " & $astNode.condStatement)
     of nodeGOTO, nodeGOSUB:
         content.add $astNode.goEXPR
     of nodeINPUT:
