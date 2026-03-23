@@ -1,7 +1,8 @@
 type
     TokenType* = enum ## Different possible token types
         PRINT, IF, THEN, GOTO, INPUT, LET, GOSUB, RETURN, CLEAR, LIST, RUN, END
-        PLUS, MINUS, TIMES, DIVIDE, LESS, GREATER, EQUAL, COMMA, GREATEREQUAL, LESSEQUAL, NOTEQUAL
+        PLUS, MINUS, TIMES, DIVIDE, LESS, GREATER, EQUAL, GREATEREQUAL, LESSEQUAL, NOTEQUAL
+        COMMA, LEFTPAREN, RIGHTPAREN
         VAR, NUMBER, STRING
         EOF, EOL
         UnknownERROR, StringERROR
@@ -19,7 +20,6 @@ type
             linePos: int
         else:
             discard
-    UnknownTokenException* = object of CatchableError
 
 
 proc newToken* (lineNum: int, tokenType: TokenType): Token = ## Generic newToken procedure that creates and returns a token
