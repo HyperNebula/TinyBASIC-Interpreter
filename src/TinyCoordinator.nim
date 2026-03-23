@@ -1,4 +1,4 @@
-import TinyLexer, TinyParser, types/Error, types/Token
+import TinyLexer, TinyParser, types/Token
 
 var
     lexer: TinyLexer.Lexer = TinyLexer.Lexer()

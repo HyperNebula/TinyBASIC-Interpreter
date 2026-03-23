@@ -30,6 +30,10 @@ proc handleErrorToken(parser: var Parser) =
     elif (parser.checkMatch(UnknownERROR)):
         parser.errorBag.add Error(name: "UnknownTokenError", msg: "at line " & $tempToken.lineNum & " [" & tempToken.content & "]")
 
+proc continueUntilEOL(parser: var Parser) =
+    while (not parser.checkMatch(EOL)):
+        parser.advance()
+    parser.advance()
 
 
 
