@@ -7,17 +7,17 @@ type
         EOF, EOL
         UnknownERROR, StringERROR
     Token* = object ## Token object that stores relevant info
-        lineNum: int
-        case tokenType: TokenType
+        lineNum*: int
+        case tokenType*: TokenType
         of VAR:
-            name: char
+            name*: char
         of NUMBER:
-            INTvalue: int
+            INTvalue*: int
         of STRING:
-            STRvalue: string
+            STRvalue*: string
         of StringERROR, UnknownERROR:
-            content: string
-            linePos: int
+            content*: string
+            linePos*: int
         else:
             discard
 

@@ -1,7 +1,6 @@
 import TinyLexer, TinyParser, types/Error, types/Token
 
 var
-    errorBag: seq[Error]
     lexer: TinyLexer.Lexer = TinyLexer.Lexer()
     parser: TinyParser.Parser = TinyParser.Parser()
 
@@ -11,6 +10,7 @@ proc run(source: string) =
     lexer.print()
 
     parser.setTokenList(tokens)
+    parser.print()
 
 
     #if (lexer.hasError):
