@@ -31,7 +31,7 @@ proc addToken(lexer: var Lexer, tokenType: TokenType, STRvalue: string) = ## Add
 proc addToken(lexer: var Lexer, tokenType: TokenType, name: char) = ## Adds VAR token to lexer tokens sequence
     lexer.tokens.add(newToken(lexer.lineCount, tokenType, name))
 
-proc addToken(lexer: var Lexer, tokenType: TokenType, INTvalue: int) = ## Adds DIGIT token to lexer tokens sequence
+proc addToken(lexer: var Lexer, tokenType: TokenType, INTvalue: int) = ## Adds NUMBER token to lexer tokens sequence
     lexer.tokens.add(newToken(lexer.lineCount, tokenType, INTvalue))
 
 proc addToken(lexer: var Lexer, tokenType: TokenType, content: string, linePos: int) = ## Adds StringERROR or UnknownERROR tokens to lexer tokens sequence
@@ -62,6 +62,12 @@ proc scanString(lexer: var Lexer) = ## Tokenizes strings contained within quotat
 
     lexer.advance()
     lexer.addToken(STRING, lexer.source[lexer.startPos+1 .. lexer.currentPos-2])
+
+proc scanNumber(lexer: var Lexer) = ## Tokenizes strings contained within quotation marks
+    while (not lexer.atEnd and isDigit(lexer.peek)):
+        lexer.advance()
+
+    lexer.addToken(NUMBER, parseInt(lexer.source[lexer.startPos .. lexer.currentPos-1]))
 
 proc scanIdentifier(lexer: var Lexer) =
     while (not lexer.atEnd and isAlphaAscii(lexer.peek)):
@@ -143,7 +149,7 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
         lexer.scanString()
     else:
         if isDigit(c):
-            lexer.addToken(DIGIT, parseInt($c))
+            lexer.scanNumber()
         elif isUpperAscii(c) and not isUpperAscii(lexer.peek):
             lexer.addToken(VAR, c)
         elif isAlphaAscii(c):
