@@ -143,6 +143,10 @@ proc scanToken(lexer: var Lexer) = ## scans and extracts a single token from the
         lexer.addToken(EQUAL)
     of ',':
         lexer.addToken(COMMA)
+    of '(':
+        lexer.addToken(LEFTPAREN)
+    of ')':
+        lexer.addToken(RIGHTPAREN)
     of '\r', '\t', ' ':
         discard
     of '"':
