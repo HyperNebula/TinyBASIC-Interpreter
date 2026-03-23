@@ -1,29 +1,13 @@
-import TinyLexer, Error
+import std/os
 
-var
-    errorBag: seq[Error]
-    lexer: TinyLexer.Lexer = TinyLexer.Lexer()
+import TinyCoordinator
 
-proc run(source: string) =
-    lexer.setSource(source)
-    lexer.scanTokens()
+let args = commandLineParams()
 
-    #if (lexer.hasError):
-    #    return
-
-    lexer.print()
-
-proc runFile*(fileName: string) =
-    run(readFile(fileName))
-    if (lexer.hasError):
-        quit(65)
-
-proc runLine*() =
-    while (true):
-        stdout.write("> ")
-        let source = readLine(stdin)
-
-        if (source == "" or source == "exit"):
-            break
-
-        run(source & $'\n')
+if args.len > 1:
+    echo "Usage: TinyBASIC [source]"
+    quit(2)
+elif args.len == 1:
+    runFile(args[0])
+else:
+    runLine()

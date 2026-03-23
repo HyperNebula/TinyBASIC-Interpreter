@@ -1,6 +1,6 @@
 import std/strutils
 
-import Token
+import types/Token
 
 type
     Lexer* = object
