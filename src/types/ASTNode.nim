@@ -41,7 +41,10 @@ type
             letVAR*: ASTNode # of nodeVAR
             letEXPR*: AstNode
 
-        of nodeRETURN, nodeCLEAR, nodeLIST, nodeRUN, nodeEND, nodeERROR, nodeEOL:
+        of nodeERROR:
+            errorMSG*: string
+
+        of nodeRETURN, nodeCLEAR, nodeLIST, nodeRUN, nodeEND, nodeEOL:
             discard
 
 proc `$`* (opKind: OperatorKind): string =
@@ -93,6 +96,10 @@ proc `$`* (astNode: ASTNode): string =
         content.add $astNode.VARlist
     of nodeLET:
         content.add ($astNode.letVAR & " = " & $astNode.letEXPR)
+
+    of nodeERROR:
+        content.add astNode.errorMSG
+
     else:
         content = ""
     return $astNode.nodeKind & content

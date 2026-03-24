@@ -29,29 +29,48 @@ proc advance(parser: var Parser) =
 proc atEnd(parser: Parser): bool =
     return (parser.peek().tokenType == EOF)
 
-proc handleErrorToken(parser: var Parser) =
-    let tempToken = parser.peek()
-    if (parser.checkMatch(StringERROR)):
-        parser.errorBag.add Error(name: "UnterminatedStringError", msg: "at line " & $tempToken.lineNum & " [" & tempToken.content & "]")
-    elif (parser.checkMatch(UnknownERROR)):
-        parser.errorBag.add Error(name: "UnknownTokenError", msg: "at line " & $tempToken.lineNum & " [" & tempToken.content & "]")
-
-proc handleEOL(parser: var Parser) =
-    if not parser.checkMatch(EOL):
-        parser.errorBag.add Error(name: "ExtraTokenError", msg: "at line " & $parser.peek().lineNum & " of type " & $parser.peek().tokenType)
-    parser.advance()
-
-proc continueUntilEOL(parser: var Parser) =
+proc continuePastEOL(parser: var Parser) =
     while (not parser.checkMatch(EOL, EOF)):
         parser.advance()
     parser.advance()
 
+proc handleEOL(parser: var Parser) =
+    if not parser.checkMatch(EOL):
+        parser.errorBag.add Error(name: "ExtraTokenError", msg: "at line " & $parser.peek().lineNum & " of type " & $parser.peek().tokenType)
+        parser.continuePastEOL()
+    else:
+        parser.advance()
+
+proc handleErrorToken(parser: var Parser): ASTNode =
+    let tempToken = parser.peek()
+    var errorName: string
+    if (parser.checkMatch(StringERROR)):
+        errorName = "UnterminatedStringError"
+    elif (parser.checkMatch(UnknownERROR)):
+        errorName = "UnknownTokenError"
+
+    parser.errorBag.add Error(name: errorName, msg: "at line " & $tempToken.lineNum & " [" & tempToken.content & "]")
+    parser.continuePastEOL()
+    return ASTNode(nodeKIND: nodeERROR, errorMSG: errorName)
+
+proc handleError(parser: var Parser, errorName: string): ASTNode =
+    if (parser.checkMatch(StringERROR, UnknownERROR)):
+        return parser.handleErrorToken()
+    else:
+        parser.errorBag.add Error(name: errorName, msg: "at line " & $parser.peek().lineNum & " of type " & $parser.peek().tokenType)
+        parser.continuePastEOL()
+        return ASTNode(nodeKIND: nodeERROR, errorMSG: errorName)
+
+
+proc parseRelop(parser: var Parser): OperatorKind =
+    if (parser.checkMatch(LESS, GREATER, EQUAL, GREATEREQUAL, LESSEQUAL, NOTEQUAL)):
+        return opLESS
 
 proc parseString(parser: var Parser): ASTNode =
     return ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)
 
 proc parseExpression(parser: var Parser): ASTNode =
-    return ASTNode()
+    return ASTNode(nodeKind: nodeNUMBER) # TEMP
 
 proc parseEXPRList(parser: var Parser): seq[ASTNode] =
     parser.advance()
@@ -62,13 +81,11 @@ proc parseEXPRList(parser: var Parser): seq[ASTNode] =
         elif (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
             return @[parser.parseExpression()] & parser.parseEXPRList()
         else:
-            parser.errorBag.add Error(name: "MissingExpressionOrString", msg: "at line " & $parser.peek().lineNum & ". Instead is type " & $parser.peek().tokenType)
-            parser.continueUntilEOL()
-            return @[]
-    else:
-        parser.errorBag.add Error(name: "MissingExpectedComma", msg: "at line " & $parser.peek().lineNum & ". Instead is type " & $parser.peek().tokenType)
-        parser.continueUntilEOL()
+            return @[parser.handleError("MissingExpressionOrString")]
+    elif (parser.checkMatch(EOL)):
         return @[]
+    else:
+        return @[parser.handleError("MissingExpectedComma")]
 
 proc parsePrint(parser: var Parser): ASTNode =
     parser.advance()
@@ -80,9 +97,46 @@ proc parsePrint(parser: var Parser): ASTNode =
         return ASTNode(nodeKind: nodePRINT,
             EXPRlist:  @[parser.parseExpression()] & parser.parseEXPRList())
     else:
-         parser.errorBag.add Error(name: "NonExpressionToken", msg: "at line " & $parser.peek().lineNum & " of type " & $parser.peek().tokenType)
-         parser.continueUntilEOL()
-         return ASTNode(nodeKIND: nodeERROR)
+         return parser.handleError("NonExpressionToken")
+
+proc parseStatement(parser: var Parser): ASTNode
+
+proc parseIF(parser: var Parser): ASTNODE =
+    parser.advance()
+
+    var
+        leftEXPR, rightEXPR: ASTNode
+        relop: OperatorKind
+
+    if (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
+        leftEXPR = parser.parseExpression()
+        parser.advance()
+    else:
+        return parser.handleError("NonExpressionToken")
+
+    if (parser.checkMatch(LESS, GREATER, EQUAL, GREATEREQUAL, LESSEQUAL, NOTEQUAL)):
+        relop = parser.parseRelop()
+        parser.advance()
+    else:
+        return parser.handleError("NotRELOPoperator")
+
+    if (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
+        rightEXPR = parser.parseExpression()
+        parser.advance()
+    else:
+        return parser.handleError("NonExpressionToken")
+
+    if (parser.checkMatch(THEN)):
+        parser.advance()
+    else:
+        return parser.handleError("MissingTHENtoken")
+
+    let statement: ASTNode = parser.parseStatement()
+
+    parser.advance()
+
+    return ASTNode(nodeKind: nodeIF, condEXPRleft: leftEXPR, condRELOP: relop, condEXPRright: rightEXPR, condStatement: statement)
+
 
 proc parseStatement(parser: var Parser): ASTNode =
     var returnAstNode: ASTNode = ASTNode(nodeKind: nodeERROR)
@@ -91,6 +145,8 @@ proc parseStatement(parser: var Parser): ASTNode =
         return ASTNode(nodeKind: nodeEOL)
     elif (parser.checkMatch(PRINT)):
         return parser.parsePrint()
+    elif (parser.checkMatch(IF)):
+        return parser.parseIF()
 
     parser.handleEOL()
     return returnAstNode

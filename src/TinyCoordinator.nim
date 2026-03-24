@@ -12,6 +12,7 @@ proc run(source: string) =
     parser.setTokenList(tokens)
     parser.parseTokens()
     parser.print()
+    echo $parser.errorBag
 
 
     #if (lexer.hasError):

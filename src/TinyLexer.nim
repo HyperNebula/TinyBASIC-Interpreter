@@ -53,10 +53,10 @@ proc peek(lexer: Lexer): char = ## looks at the next character without
     return lexer.source[lexer.currentPos]
 
 proc scanString(lexer: var Lexer) = ## Tokenizes strings contained within quotation marks
-    while (not lexer.atEnd and lexer.peek != '"'):
+    while (not lexer.atEnd and lexer.peek != '"' and lexer.peek != '\n'):
         lexer.advance()
 
-    if lexer.atEnd:
+    if lexer.atEnd or lexer.peek == '\n':
         lexer.addToken(StringERROR, multiReplace($lexer.source[lexer.startPos .. lexer.currentPos-1], (Newlines, '\0')), lexer.linePos - (lexer.currentPos - lexer.startPos) + 1)
         return
 
