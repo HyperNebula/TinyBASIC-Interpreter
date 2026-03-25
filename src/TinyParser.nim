@@ -230,25 +230,37 @@ proc parseStatement(parser: var Parser): ASTNode =
     if parser.checkMatch(EOF):
         return
     elif parser.checkMatch(EOL):
-        result = ASTNode(nodeKind: nodeEOL)
+        return ASTNode(nodeKind: nodeEOL)
     elif parser.checkMatch(PRINT):
         parser.advance()
-        result = parser.parsePRINT()
+        return parser.parsePRINT()
     elif parser.checkMatch(IF):
         parser.advance()
-        result = parser.parseIF()
+        return parser.parseIF()
     elif parser.checkMatch(GOTO):
         parser.advance()
-        result = ASTNode(nodeKind: nodeGOTO, goEXPR: parser.parseExpression())
+        return ASTNode(nodeKind: nodeGOTO, goEXPR: parser.parseExpression())
     elif parser.checkMatch(INPUT):
         parser.advance()
-        result = ASTNode(nodeKind: nodeINPUT, VARlist: parser.parseVARList())
+        return ASTNode(nodeKind: nodeINPUT, VARlist: parser.parseVARList())
     elif parser.checkMatch(LET):
         parser.advance()
-        result = parser.parseLET()
+        return parser.parseLET()
     elif parser.checkMatch(GOSUB):
         parser.advance()
-        result = ASTNode(nodeKind: nodeGOSUB, goEXPR: parser.parseExpression())
+        return ASTNode(nodeKind: nodeGOSUB, goEXPR: parser.parseExpression())
+    elif parser.checkMatch(RETURN):
+        return ASTNode(nodeKind: nodeRETURN)
+    elif parser.checkMatch(CLEAR):
+        return ASTNode(nodeKind: nodeCLEAR)
+    elif parser.checkMatch(LIST):
+        return ASTNode(nodeKind: nodeLIST)
+    elif parser.checkMatch(RUN):
+        return ASTNode(nodeKind: nodeRUN)
+    elif parser.checkMatch(END):
+        return ASTNode(nodeKind: nodeEND)
+    else:
+        parser.handleError("UnknownToken")
 
 
 proc parseTokens*(parser: var Parser): seq[ASTNode] {.discardable.} =
