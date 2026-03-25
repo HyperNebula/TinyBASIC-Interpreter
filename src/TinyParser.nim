@@ -4,14 +4,19 @@ type
     Parser* = object
         tokens: seq[Token]
         currentPos: int = 0
-        AST*: seq[ASTNode]
-        errorBag*: seq[Error]
+        AST: seq[ASTNode]
+        errorBag: seq[Error]
 
+
+proc hasError*(parser: Parser): bool =
+    return parser.errorBag.len > 0
 
 proc setTokenList*(parser: var Parser, tokens: seq[Token]) =
     parser.tokens = tokens
 
 proc peek(parser: Parser): Token =
+    if parser.currentPos >= parser.tokens.len:
+        return Token(tokenType: EOF)
     return parser.tokens[parser.currentPos]
 
 proc checkMatch(parser: Parser, checkTokenType: TokenType): bool = ## Checks if the current token in the tokens stream matches the inputed token type
@@ -24,25 +29,29 @@ proc checkMatch(parser: Parser, checkTokenTypes: varargs[TokenType]): bool = ## 
     return false
 
 proc advance(parser: var Parser) =
-    if parser.currentPos > parser.tokens.len:
+    if parser.currentPos > parser.tokens.len - 1:
         parser.errorBag.add Error(name: "UnexpectedEOF", msg: "Expected more tokens but file ended prematurely")
     else:
         parser.currentPos.inc()
 
 proc atEnd(parser: Parser): bool =
-    return (parser.peek().tokenType == EOF)
+    return parser.checkMatch(EOF)
 
 proc continuePastEOL(parser: var Parser) =
     while (not parser.checkMatch(EOL, EOF)):
         parser.advance()
-    parser.advance()
+
+    if parser.checkMatch(EOL):
+        parser.advance()
 
 proc handleEOL(parser: var Parser) =
-    if not parser.checkMatch(EOL):
+    if parser.checkMatch(EOL):
+        parser.advance()
+    elif parser.checkMatch(EOF):
+        return
+    else:
         parser.errorBag.add Error(name: "ExtraTokenError", msg: "at line " & $parser.peek().lineNum & " of type " & $parser.peek().tokenType)
         parser.continuePastEOL()
-    else:
-        parser.advance()
 
 proc handleErrorToken(parser: var Parser): ASTNode =
     let tempToken = parser.peek()
@@ -199,21 +208,22 @@ proc parseIF(parser: var Parser): ASTNODE =
 
     return ASTNode(nodeKind: nodeIF, condEXPRleft: leftEXPR, condRELOP: relop, condEXPRright: rightEXPR, condStatement: statement)
 
-
 proc parseStatement(parser: var Parser): ASTNode =
     var returnAstNode: ASTNode = ASTNode(nodeKind: nodeERROR)
-    if (parser.checkMatch(EOL)):
+    if parser.checkMatch(EOF):
+        return
+    elif parser.checkMatch(EOL):
+        returnAstNode = ASTNode(nodeKind: nodeEOL)
+    elif parser.checkMatch(PRINT):
         parser.advance()
-        return ASTNode(nodeKind: nodeEOL)
-    elif (parser.checkMatch(PRINT)):
+        returnAstNode = parser.parsePrint()
+    elif parser.checkMatch(IF):
         parser.advance()
-        return parser.parsePrint()
-    elif (parser.checkMatch(IF)):
-        parser.advance()
-        return parser.parseIF()
+        returnAstNode = parser.parseIF()
 
     parser.handleEOL()
     return returnAstNode
+
 
 proc parseTokens*(parser: var Parser): seq[ASTNode] {.discardable.} =
     var returnSeq: seq[ASTNode]
@@ -227,3 +237,7 @@ proc parseTokens*(parser: var Parser): seq[ASTNode] {.discardable.} =
 proc print*(parser: Parser) = ## Prints all ASTNodes stored in the Parser.AST sequence
     for astNode in parser.AST:
         echo $astNode
+
+proc printERRORS*(parser: Parser) =
+    for error in parser.errorBag:
+        echo $error

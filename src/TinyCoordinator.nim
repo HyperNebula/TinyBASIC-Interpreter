@@ -7,28 +7,25 @@ var
 proc run(source: string) =
     lexer.setSource(source)
     var tokens: seq[Token] = lexer.scanTokens()
-    
-    echo "\nTOKENS:"
-    lexer.print()
 
     parser.setTokenList(tokens)
     parser.parseTokens()
-    
+
+    echo "\nTOKENS:"
+    lexer.print()
+
     echo "\nTREE:"
     parser.print()
-    
-    echo "\nERRORS:"
-    echo $parser.errorBag
 
-
-    #if (lexer.hasError):
-    #    return
-
+    if (parser.hasError()):
+        return
 
 
 proc runFile*(fileName: string) =
     run(readFile(fileName))
-    if (lexer.hasError):
+    if (parser.hasError()):
+        echo "\nERRORS:"
+        parser.printERRORS()
         quit(65)
 
 proc runLine*() =

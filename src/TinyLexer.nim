@@ -9,7 +9,6 @@ type
         currentPos: int = 0
         startPos: int = 0
         linePos: int = 0
-        hasError*: bool = false
         tokens: seq[Token]
 
 
@@ -19,7 +18,6 @@ proc setSource*(lexer: var Lexer, source: string) = ## Used to set the source fo
     lexer.currentPos = 0
     lexer.startPos = 0
     lexer.linePos = 0
-    lexer.hasError = false
 
 
 proc addToken(lexer: var Lexer, tokenType: TokenType) = ## addToken procs to create tokens and then add it to the token sequence
@@ -35,7 +33,6 @@ proc addToken(lexer: var Lexer, tokenType: TokenType, INTvalue: int) = ## Adds N
     lexer.tokens.add(newToken(lexer.lineCount, tokenType, INTvalue))
 
 proc addToken(lexer: var Lexer, tokenType: TokenType, content: string, linePos: int) = ## Adds StringERROR or UnknownERROR tokens to lexer tokens sequence
-    lexer.hasError = true # move this to parser eventually
     lexer.tokens.add(newToken(lexer.lineCount, tokenType, content, linePos))
 
 
