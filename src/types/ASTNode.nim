@@ -37,7 +37,7 @@ type
         of nodeGOTO, nodeGOSUB:
             goEXPR*: ASTNode
         of nodeINPUT:
-            VARlist*: seq[ASTNode] # Whill store ASTNode of kind nodeVAR
+            VARlist*: seq[ASTNode] # Will store ASTNode of kind nodeVAR
         of nodeLET:
             letVAR*: ASTNode # of nodeVAR
             letEXPR*: ASTNode
