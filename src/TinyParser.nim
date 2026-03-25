@@ -63,21 +63,44 @@ proc handleError(parser: var Parser, errorName: string): ASTNode =
 
 
 proc parseRelop(parser: var Parser): OperatorKind =
-    if (parser.checkMatch(LESS, GREATER, EQUAL, GREATEREQUAL, LESSEQUAL, NOTEQUAL)):
+    if parser.checkMatch(LESS):
         return opLESS
+    elif parser.checkMatch(GREATER):
+        return opGREATER
+    elif parser.checkMatch(GREATEREQUAL):
+        return opGREATEREQUAL
+    elif parser.checkMatch(LESSEQUAL):
+        return opLESSEQUAL
+    elif parser.checkMatch(NOTEQUAL):
+        return opNOTEQUAL
+    elif parser.checkMatch(EQUAL):
+        return opEQUAL
+    else:
+        return parser.handleError("NotRELOPoperator")
 
 proc parseString(parser: var Parser): ASTNode =
     return ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)
 
 proc parseExpression(parser: var Parser): ASTNode =
-    return ASTNode(nodeKind: nodeNUMBER) # TEMP
+    if parser.checkMatch(PLUS):
+        return
+    elif parser.checkMatch(MINUS):
+        return
+    elif parser.checkMatch(VAR):
+        return
+    elif parser.checkmatch(NUMBER):
+        return
+    elif parser.checkMatch(LEFTPAREN):
+        return
+    else:
+        return parser.handleError("NotValidExpression")
 
 proc parseEXPRList(parser: var Parser): seq[ASTNode] =
     parser.advance()
     if (parser.checkMatch(COMMA)):
         parser.advance()
         if (parser.checkMatch(STRING)):
-            return @[ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)] & parser.parseEXPRList()
+            return @[parser.parseString()] & parser.parseEXPRList()
         elif (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
             return @[parser.parseExpression()] & parser.parseEXPRList()
         else:
@@ -88,8 +111,6 @@ proc parseEXPRList(parser: var Parser): seq[ASTNode] =
         return @[parser.handleError("MissingExpectedComma")]
 
 proc parsePrint(parser: var Parser): ASTNode =
-    parser.advance()
-
     if (parser.checkMatch(STRING)):
         return ASTNode(nodeKind: nodePRINT,
             EXPRlist:  @[parser.parseString()] & parser.parseEXPRList())
@@ -102,29 +123,18 @@ proc parsePrint(parser: var Parser): ASTNode =
 proc parseStatement(parser: var Parser): ASTNode
 
 proc parseIF(parser: var Parser): ASTNODE =
-    parser.advance()
-
     var
         leftEXPR, rightEXPR: ASTNode
         relop: OperatorKind
 
-    if (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
-        leftEXPR = parser.parseExpression()
-        parser.advance()
-    else:
-        return parser.handleError("NonExpressionToken")
+    leftEXPR = parser.parseExpression()
+    parser.advance()
 
-    if (parser.checkMatch(LESS, GREATER, EQUAL, GREATEREQUAL, LESSEQUAL, NOTEQUAL)):
-        relop = parser.parseRelop()
-        parser.advance()
-    else:
-        return parser.handleError("NotRELOPoperator")
+    relop = parser.parseRelop()
+    parser.advance()
 
-    if (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
-        rightEXPR = parser.parseExpression()
-        parser.advance()
-    else:
-        return parser.handleError("NonExpressionToken")
+    rightEXPR = parser.parseExpression()
+    parser.advance()
 
     if (parser.checkMatch(THEN)):
         parser.advance()
@@ -144,8 +154,10 @@ proc parseStatement(parser: var Parser): ASTNode =
         parser.advance()
         return ASTNode(nodeKind: nodeEOL)
     elif (parser.checkMatch(PRINT)):
+        parser.advance()
         return parser.parsePrint()
     elif (parser.checkMatch(IF)):
+        parser.advance()
         return parser.parseIF()
 
     parser.handleEOL()
