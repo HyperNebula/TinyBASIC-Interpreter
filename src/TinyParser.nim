@@ -250,14 +250,19 @@ proc parseStatement(parser: var Parser): ASTNode =
         parser.advance()
         return ASTNode(nodeKind: nodeGOSUB, goEXPR: parser.parseExpression())
     elif parser.checkMatch(RETURN):
+        parser.advance()
         return ASTNode(nodeKind: nodeRETURN)
     elif parser.checkMatch(CLEAR):
+        parser.advance()
         return ASTNode(nodeKind: nodeCLEAR)
     elif parser.checkMatch(LIST):
+        parser.advance()
         return ASTNode(nodeKind: nodeLIST)
     elif parser.checkMatch(RUN):
+        parser.advance()
         return ASTNode(nodeKind: nodeRUN)
     elif parser.checkMatch(END):
+        parser.advance()
         return ASTNode(nodeKind: nodeEND)
     else:
         parser.handleError("UnknownToken")
