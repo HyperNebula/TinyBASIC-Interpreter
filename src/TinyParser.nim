@@ -74,7 +74,6 @@ proc handleError(parser: var Parser, errorName: string): ASTNode =
         return ASTNode(nodeKIND: nodeERROR, errorMSG: errorName)
 
 
-
 proc parseString(parser: var Parser): ASTNode =
     result = ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)
     parser.advance()
@@ -183,7 +182,7 @@ proc parseEXPRList(parser: var Parser): seq[ASTNode] =
     else:
         return @[parser.handleError("MissingExpectedComma")]
 
-proc parsePrint(parser: var Parser): ASTNode =
+proc parsePRINT(parser: var Parser): ASTNode =
     if (parser.checkMatch(STRING)):
         return ASTNode(nodeKind: nodePRINT,
             EXPRlist:  @[parser.parseString()] & parser.parseEXPRList())
@@ -195,7 +194,7 @@ proc parsePrint(parser: var Parser): ASTNode =
 
 proc parseStatement(parser: var Parser): ASTNode
 
-proc parseIF(parser: var Parser): ASTNODE =
+proc parseIF(parser: var Parser): ASTNode =
     var
         leftEXPR, rightEXPR: ASTNode
         relop: OperatorKind
@@ -215,6 +214,18 @@ proc parseIF(parser: var Parser): ASTNODE =
 
     return ASTNode(nodeKind: nodeIF, condEXPRleft: leftEXPR, condRELOP: relop, condEXPRright: rightEXPR, condStatement: statement)
 
+proc parseLET(parser: var Parser): ASTNode =
+    let varReturn = parser.parseVAR()
+
+    if parser.checkMatch(EQUAL):
+        parser.advance()
+    else:
+        return parser.handleError("MissingEQUALtoken")
+
+    let exprReturn = parser.parseExpression()
+
+    return ASTNode(nodeKind: nodeLET, letVAR: varReturn, letEXPR: exprReturn)
+
 proc parseStatement(parser: var Parser): ASTNode =
     if parser.checkMatch(EOF):
         return
@@ -222,7 +233,7 @@ proc parseStatement(parser: var Parser): ASTNode =
         result = ASTNode(nodeKind: nodeEOL)
     elif parser.checkMatch(PRINT):
         parser.advance()
-        result = parser.parsePrint()
+        result = parser.parsePRINT()
     elif parser.checkMatch(IF):
         parser.advance()
         result = parser.parseIF()
@@ -232,6 +243,9 @@ proc parseStatement(parser: var Parser): ASTNode =
     elif parser.checkMatch(INPUT):
         parser.advance()
         result = ASTNode(nodeKind: nodeINPUT, VARlist: parser.parseVARList())
+    elif parser.checkMatch(LET):
+        parser.advance()
+        result = parser.parseLET()
     elif parser.checkMatch(GOSUB):
         parser.advance()
         result = ASTNode(nodeKind: nodeGOSUB, goEXPR: parser.parseExpression())
