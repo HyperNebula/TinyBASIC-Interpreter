@@ -7,11 +7,17 @@ var
 proc run(source: string) =
     lexer.setSource(source)
     var tokens: seq[Token] = lexer.scanTokens()
+    
+    echo "\nTOKENS:"
     lexer.print()
 
     parser.setTokenList(tokens)
     parser.parseTokens()
+    
+    echo "\nTREE:"
     parser.print()
+    
+    echo "\nERRORS:"
     echo $parser.errorBag
 
 

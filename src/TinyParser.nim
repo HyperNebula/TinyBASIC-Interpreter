@@ -24,7 +24,10 @@ proc checkMatch(parser: Parser, checkTokenTypes: varargs[TokenType]): bool = ## 
     return false
 
 proc advance(parser: var Parser) =
-    parser.currentPos.inc()
+    if parser.currentPos > parser.tokens.len:
+        parser.errorBag.add Error(name: "UnexpectedEOF", msg: "Expected more tokens but file ended prematurely")
+    else:
+        parser.currentPos.inc()
 
 proc atEnd(parser: Parser): bool =
     return (parser.peek().tokenType == EOF)
@@ -62,41 +65,95 @@ proc handleError(parser: var Parser, errorName: string): ASTNode =
         return ASTNode(nodeKIND: nodeERROR, errorMSG: errorName)
 
 
-proc parseRelop(parser: var Parser): OperatorKind =
-    if parser.checkMatch(LESS):
-        return opLESS
-    elif parser.checkMatch(GREATER):
-        return opGREATER
-    elif parser.checkMatch(GREATEREQUAL):
-        return opGREATEREQUAL
-    elif parser.checkMatch(LESSEQUAL):
-        return opLESSEQUAL
-    elif parser.checkMatch(NOTEQUAL):
-        return opNOTEQUAL
-    elif parser.checkMatch(EQUAL):
-        return opEQUAL
-    else:
-        return parser.handleError("NotRELOPoperator")
 
-proc parseString(parser: var Parser): ASTNode =
-    return ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)
+proc parseExpression(parser: var Parser): ASTNode
+
+proc parseFactor(parser: var Parser): ASTNode =
+    if parser.checkMatch(VAR):
+        let returnNode = ASTNode(nodeKind: nodeVAR, VARname: parser.peek().name)
+        parser.advance()
+        return returnNode
+    elif parser.checkMatch(NUMBER):
+        let returnNode = ASTNode(nodeKind: nodeNUMBER, INTvalue: parser.peek().INTvalue)
+        parser.advance()
+        return returnNode
+    elif parser.checkMatch(LEFTPAREN):
+        parser.advance()
+        let returnEXPR: ASTNode = parser.parseExpression()
+        if parser.checkMatch(RIGHTPAREN):
+            parser.advance()
+            return returnEXPR
+        else:
+            return parser.handleError("MissingClossingParentheses")
+    else:
+        return parser.handleError("NotValidFactor")
+
+proc parseTerm(parser: var Parser): ASTNode =
+    var returnTerm: ASTNode = parser.parseFactor()
+
+    while parser.checkMatch(TIMES, DIVIDE):
+        if parser.checkMatch(TIMES):
+            parser.advance()
+            returnTerm = ASTNode(nodeKind: nodeBINARY, binLEFT: returnTerm, binOP: opTIMES, binRIGHT: parser.parseFactor())
+        elif parser.checkMatch(DIVIDE):
+            parser.advance()
+            returnTerm = ASTNode(nodeKind: nodeBINARY, binLEFT: returnTerm, binOP: opDIVIDE, binRIGHT: parser.parseFactor())
+
+    return returnTerm
 
 proc parseExpression(parser: var Parser): ASTNode =
+    var returnEXPR: ASTNode
+
     if parser.checkMatch(PLUS):
-        return
+        parser.advance()
+        returnEXPR = ASTNode(nodeKind: nodeUNARY, unOP: opPLUS, unOPERAND: parser.parseTerm())
     elif parser.checkMatch(MINUS):
-        return
-    elif parser.checkMatch(VAR):
-        return
-    elif parser.checkmatch(NUMBER):
-        return
-    elif parser.checkMatch(LEFTPAREN):
-        return
+        parser.advance()
+        returnEXPR = ASTNode(nodeKind: nodeUNARY, unOP: opMINUS, unOPERAND: parser.parseTerm())
+    elif parser.checkMatch(VAR, NUMBER, LEFTPAREN):
+        returnEXPR = parser.parseTerm()
     else:
         return parser.handleError("NotValidExpression")
 
-proc parseEXPRList(parser: var Parser): seq[ASTNode] =
+    while parser.checkMatch(PLUS, MINUS):
+        if parser.checkMatch(PLUS):
+            parser.advance()
+            returnEXPR = ASTNode(nodeKind: nodeBINARY, binLEFT: returnEXPR, binOP: opPLUS, binRIGHT: parser.parseTerm())
+        elif parser.checkMatch(MINUS):
+            parser.advance()
+            returnEXPR = ASTNode(nodeKind: nodeBINARY, binLEFT: returnEXPR, binOP: opMINUS, binRIGHT: parser.parseTerm())
+
+    return returnEXPR
+
+proc parseRelop(parser: var Parser): OperatorKind =
+    if parser.checkMatch(LESS):
+        parser.advance()
+        return opLESS
+    elif parser.checkMatch(GREATER):
+        parser.advance()
+        return opGREATER
+    elif parser.checkMatch(GREATEREQUAL):
+        parser.advance()
+        return opGREATEREQUAL
+    elif parser.checkMatch(LESSEQUAL):
+        parser.advance()
+        return opLESSEQUAL
+    elif parser.checkMatch(NOTEQUAL):
+        parser.advance()
+        return opNOTEQUAL
+    elif parser.checkMatch(EQUAL):
+        parser.advance()
+        return opEQUAL
+    else:
+        discard parser.handleError("NotRELOPoperator")
+        return opERROR
+
+proc parseString(parser: var Parser): ASTNode =
+    let returnString = ASTNode(nodeKind: nodeSTRING, STRvalue: parser.peek().STRvalue)
     parser.advance()
+    return returnString
+
+proc parseEXPRList(parser: var Parser): seq[ASTNode] =
     if (parser.checkMatch(COMMA)):
         parser.advance()
         if (parser.checkMatch(STRING)):
@@ -118,7 +175,7 @@ proc parsePrint(parser: var Parser): ASTNode =
         return ASTNode(nodeKind: nodePRINT,
             EXPRlist:  @[parser.parseExpression()] & parser.parseEXPRList())
     else:
-         return parser.handleError("NonExpressionToken")
+         return parser.handleError("NonPrintableToken")
 
 proc parseStatement(parser: var Parser): ASTNode
 
@@ -128,13 +185,10 @@ proc parseIF(parser: var Parser): ASTNODE =
         relop: OperatorKind
 
     leftEXPR = parser.parseExpression()
-    parser.advance()
 
     relop = parser.parseRelop()
-    parser.advance()
 
     rightEXPR = parser.parseExpression()
-    parser.advance()
 
     if (parser.checkMatch(THEN)):
         parser.advance()
@@ -142,8 +196,6 @@ proc parseIF(parser: var Parser): ASTNODE =
         return parser.handleError("MissingTHENtoken")
 
     let statement: ASTNode = parser.parseStatement()
-
-    parser.advance()
 
     return ASTNode(nodeKind: nodeIF, condEXPRleft: leftEXPR, condRELOP: relop, condEXPRright: rightEXPR, condStatement: statement)
 

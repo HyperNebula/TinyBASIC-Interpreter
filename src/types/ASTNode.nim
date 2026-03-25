@@ -2,6 +2,7 @@ type
     OperatorKind* = enum
         opPLUS, opMINUS, opTIMES, opDIVIDE
         opLESS, opGREATER, opEQUAL, opGREATEREQUAL, opLESSEQUAL, opNOTEQUAL
+        opERROR
 
     NodeKind* = enum
         nodeVAR, nodeNUMBER, nodeSTRING
@@ -27,7 +28,7 @@ type
             unOPERAND*: ASTNode
 
         of nodePRINT:
-            EXPRlist*: seq[ASTNode] # While store ASTNode of kind nodeSTRING or expressions
+            EXPRlist*: seq[ASTNode] # Will store ASTNode of kind nodeSTRING or expressions
         of nodeIF:
             condEXPRleft*: ASTNode
             condRELOP*: OperatorKind
@@ -36,10 +37,10 @@ type
         of nodeGOTO, nodeGOSUB:
             goEXPR*: ASTNode
         of nodeINPUT:
-            VARlist*: seq[ASTNode] # While store ASTNode of kind nodeVAR
+            VARlist*: seq[ASTNode] # Whill store ASTNode of kind nodeVAR
         of nodeLET:
             letVAR*: ASTNode # of nodeVAR
-            letEXPR*: AstNode
+            letEXPR*: ASTNode
 
         of nodeERROR:
             errorMSG*: string
@@ -69,6 +70,8 @@ proc `$`* (opKind: OperatorKind): string =
         return ">="
     of opNOTEQUAL:
         return "!="
+    of opERROR:
+        return "opERROR"
 
 proc `$`* (astNode: ASTNode): string =
     var content: string = ": "
@@ -82,9 +85,9 @@ proc `$`* (astNode: ASTNode): string =
         return $astNode.VARname
 
     of nodeBINARY:
-        return ($astNode.binLeft & " " & $astNode.binOP & " " & $astNode.binRIGHT)
+        return ("[" & $astNode.binLeft & " " & $astNode.binOP & " " & $astNode.binRIGHT & "]")
     of nodeUNARY:
-        return ($astNode.unOP & $astNode.unOPERAND)
+        return ("[" & $astNode.unOP & $astNode.unOPERAND & "]")
 
     of nodePRINT:
         content.add $astNode.EXPRlist
