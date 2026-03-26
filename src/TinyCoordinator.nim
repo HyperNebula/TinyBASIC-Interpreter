@@ -18,6 +18,8 @@ proc run(source: string) =
     parser.print()
 
     if (parser.hasError()):
+        echo "\nERRORS:"
+        parser.printERRORS()
         return
 
 

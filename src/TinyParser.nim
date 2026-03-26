@@ -13,6 +13,8 @@ proc hasError*(parser: Parser): bool =
 
 proc setTokenList*(parser: var Parser, tokens: seq[Token]) =
     parser.tokens = tokens
+    parser.currentPos = 0
+    parser.errorBag = @[]
 
 proc peek(parser: Parser): Token =
     if parser.currentPos >= parser.tokens.len:
@@ -35,10 +37,10 @@ proc advance(parser: var Parser) =
         parser.currentPos.inc()
 
 proc atEnd(parser: Parser): bool =
-    return parser.checkMatch(EOF)
+    return parser.currentPos > parser.tokens.len - 1
 
 proc continuePastEOL(parser: var Parser) =
-    while (not parser.checkMatch(EOL, EOF)):
+    while (not parser.checkMatch(EOL) and not parser.atEnd()):
         parser.advance()
 
     if parser.checkMatch(EOL):
@@ -47,7 +49,7 @@ proc continuePastEOL(parser: var Parser) =
 proc handleEOL(parser: var Parser) =
     if parser.checkMatch(EOL):
         parser.advance()
-    elif parser.checkMatch(EOF):
+    elif parser.atEnd():
         return
     else:
         parser.errorBag.add Error(name: "ExtraTokenError", msg: "at line " & $parser.peek().lineNum & " of type " & $parser.peek().tokenType)
@@ -227,7 +229,7 @@ proc parseLET(parser: var Parser): ASTNode =
     return ASTNode(nodeKind: nodeLET, letVAR: varReturn, letEXPR: exprReturn)
 
 proc parseStatement(parser: var Parser): ASTNode =
-    if parser.checkMatch(EOF):
+    if parser.atEnd():
         return
     elif parser.checkMatch(EOL):
         return ASTNode(nodeKind: nodeEOL)

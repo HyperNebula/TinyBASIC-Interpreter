@@ -165,7 +165,7 @@ proc scanTokens*(lexer: var Lexer): seq[Token] {.discardable.} = ## Loops throug
         lexer.startPos = lexer.currentPos
         lexer.scanToken()
 
-    lexer.tokens.add(newToken(lexer.lineCount + 1, EOF))
+    #lexer.tokens.add(newToken(lexer.lineCount + 1, EOF))
     return lexer.tokens
 
 proc print*(lexer: Lexer) = ## Prints all tokens stored in the lexer.tokens sequence
