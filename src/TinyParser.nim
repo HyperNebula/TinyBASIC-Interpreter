@@ -171,16 +171,16 @@ proc parseVARList(parser: var Parser): seq[ASTNode] =
         result.add(parser.parseVAR())
 
 proc parseEXPRList(parser: var Parser): seq[ASTNode] =
-    if (parser.checkMatch(COMMA)):
+    while (parser.checkMatch(COMMA)):
         parser.advance()
         if (parser.checkMatch(STRING)):
-            return @[parser.parseString()] & parser.parseEXPRList()
+            result.add(parser.parseString())
         elif (parser.checkMatch(PLUS, MINUS, VAR, NUMBER, LEFTPAREN)):
-            return @[parser.parseExpression()] & parser.parseEXPRList()
+            result.add(parser.parseExpression())
         else:
-            return @[parser.handleError("MissingExpressionOrString")]
-    elif (parser.checkMatch(EOL)):
-        return @[]
+            result.add(parser.handleError("MissingExpressionOrString"))
+    if (parser.checkMatch(EOL)):
+        return result
     else:
         return @[parser.handleError("MissingExpectedComma")]
 
