@@ -7,7 +7,7 @@ type
     NodeKind* = enum
         nodeVAR, nodeNUMBER, nodeSTRING
         nodePRINT, nodeIF, nodeGOTO, nodeINPUT, nodeLET, nodeGOSUB, nodeRETURN, nodeCLEAR, nodeLIST, nodeRUN, nodeEND
-        nodeUNARY, nodeBINARY
+        nodeUNARY, nodeBINARY, nodeGROUPING
         nodeEOL, nodeERROR
 
     ASTNode* = ref object
@@ -26,6 +26,8 @@ type
         of nodeUNARY: # For (+|-) term rule
             unOP*: OperatorKind
             unOPERAND*: ASTNode
+        of nodeGROUPING:
+            groupEXPR*: ASTNode
 
         of nodePRINT:
             EXPRlist*: seq[ASTNode] # Will store ASTNode of kind nodeSTRING or expressions
@@ -85,9 +87,11 @@ proc `$`* (astNode: ASTNode): string =
         return $astNode.VARname
 
     of nodeBINARY:
-        return ("[" & $astNode.binLeft & " " & $astNode.binOP & " " & $astNode.binRIGHT & "]")
+        return ($astNode.binLeft & " " & $astNode.binOP & " " & $astNode.binRIGHT)
     of nodeUNARY:
-        return ("[" & $astNode.unOP & $astNode.unOPERAND & "]")
+        return ($astNode.unOP & $astNode.unOPERAND)
+    of nodeGROUPING:
+        return ("(" & $astNode.groupEXPR & ")")
 
     of nodePRINT:
         content.add $astNode.EXPRlist

@@ -100,7 +100,7 @@ proc parseFactor(parser: var Parser): ASTNode =
         return returnNode
     elif parser.checkMatch(LEFTPAREN):
         parser.advance()
-        let returnEXPR: ASTNode = parser.parseExpression()
+        let returnEXPR: ASTNode = ASTNode(nodeKind: nodeGROUPING, groupEXPR: parser.parseExpression())
         if parser.checkMatch(RIGHTPAREN):
             parser.advance()
             return returnEXPR
