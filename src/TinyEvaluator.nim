@@ -6,6 +6,10 @@ type
         currentLinePos: int = 0
         varList: seq[tuple[name: char, value: int]]
 
+proc setAST*(eval: var Evaluator, ast: seq[ASTNode]) =
+    eval.AST = ast
+    eval.currentLinePos = 0
+    eval.varList = @[]
 
 proc evalVar(eval: var Evaluator, astNode: ASTNode): int =
     for varT in eval.varList:
@@ -21,8 +25,32 @@ proc evalSring(eval: var Evaluator, astNode: ASTNode): string =
 
 proc evalEXPR(eval: var Evaluator, astNode: ASTNode): int
 
-proc evalFactor(eval: var Evaluator, astNode: ASTNode): int =
-    if astNode.nodeKind == nodeVAR:
+proc evalUnary(eval: var Evaluator, astNode: ASTNode): int =
+    if astNode.unOP == opMINUS:
+        return - eval.evalEXPR(astNode.unOPERAND)
+    elif astNode.unOP == opPLUS:
+        return eval.evalEXPR(astNode.unOPERAND)
+    else:
+        echo "ERROR"
+
+proc evalBinary(eval: var Evaluator, astNode: ASTNode): int =
+    if astNode.binOP == opPLUS:
+        return eval.evalEXPR(astNode.binLEFT) + eval.evalEXPR(astNode.binRIGHT)
+    elif astNode.binOP == opMINUS:
+        return eval.evalEXPR(astNode.binLEFT) - eval.evalEXPR(astNode.binRIGHT)
+    elif astNode.binOP == opTIMES:
+        return eval.evalEXPR(astNode.binLEFT) * eval.evalEXPR(astNode.binRIGHT)
+    elif astNode.binOP == opDIVIDE:
+        return eval.evalEXPR(astNode.binLEFT) div eval.evalEXPR(astNode.binRIGHT)
+    else:
+        echo "ERROR"
+
+proc evalEXPR(eval: var Evaluator, astNode: ASTNode): int =
+    if astNode.nodeKind == nodeUNARY:
+        return eval.evalUnary(astNode)
+    elif astNode.nodeKind == nodeBINARY:
+        return eval.evalBinary(astNode)
+    elif astNode.nodeKind == nodeVAR:
         return eval.evalVar(astNode)
     elif astNode.nodeKind == nodeNUMBER:
         return eval.evalNumber(astNode)
@@ -31,21 +59,21 @@ proc evalFactor(eval: var Evaluator, astNode: ASTNode): int =
     else:
         echo "ERROR"
 
-proc evalUnary(eval: var Evaluator, astNode: ASTNode): int =
-    return
+proc evalEXPRlist(eval: var Evaluator, astNodeList: seq[ASTNode]): seq[string] =
+    for expr in astNodeList:
+        if expr.nodeKind == nodeSTRING:
+            result.add eval.evalSring(expr)
+        else:
+            result.add($eval.evalEXPR(expr))
 
-proc evalBinary(eval: var Evaluator, astNode: ASTNode): int =
-    return
-
-proc evalEXPR(eval: var Evaluator, astNode: ASTNode): int =
-    return
-
-proc evalEXPRlist(eval: var Evaluator): string =
-    return
-
-proc evalLine(eval: var Evaluator) =
-    case eval.AST[eval.currentLinePos].nodeKind:
+proc evalLine(eval: var Evaluator, astNode: ASTNode) =
+    case astNode.nodeKind:
     of nodePRINT:
-        return
+        echo "PRINT: " & $eval.evalEXPRlist(astNode.EXPRlist)
     else:
-         echo "ERROR"
+        echo "ERROR: Unknown token"
+
+
+proc eval*(eval: var Evaluator) =
+    for astNode in eval.AST:
+        eval.evalLine(astNode)
