@@ -70,10 +70,40 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
     case astNode.nodeKind:
     of nodePRINT:
         echo "PRINT: " & $eval.evalEXPRlist(astNode.EXPRlist)
+
+        eval.currentLinePos += 1
+    of nodeIF:
+        case astNode.condRELOP:
+        of opLESS:
+            if eval.evalEXPR(astNode.condEXPRleft) < eval.evalEXPR(astNode.condEXPRright):
+                eval.evalLine(astNode.condStatement)
+        of opGREATER:
+            if eval.evalEXPR(astNode.condEXPRleft) > eval.evalEXPR(astNode.condEXPRright):
+                eval.evalLine(astNode.condStatement)
+        of opLESSEQUAL:
+            if eval.evalEXPR(astNode.condEXPRleft) <= eval.evalEXPR(astNode.condEXPRright):
+                eval.evalLine(astNode.condStatement)
+        of opGREATEREQUAL:
+            if eval.evalEXPR(astNode.condEXPRleft) >= eval.evalEXPR(astNode.condEXPRright):
+                eval.evalLine(astNode.condStatement)
+        of opNOTEQUAL:
+            if eval.evalEXPR(astNode.condEXPRleft) != eval.evalEXPR(astNode.condEXPRright):
+                eval.evalLine(astNode.condStatement)
+        of opEQUAL:
+            if eval.evalEXPR(astNode.condEXPRleft) == eval.evalEXPR(astNode.condEXPRright):
+                eval.evalLine(astNode.condStatement)
+        else:
+            echo "ERROR: Unknown RELOP"
+
+        eval.currentLinePos += 1
+
+    of nodeGOTO:
+        eval.currentLinePos = eval.evalEXPR(astNode.goEXPR) - 1
+
     else:
         echo "ERROR: Unknown token"
 
 
 proc eval*(eval: var Evaluator) =
-    for astNode in eval.AST:
-        eval.evalLine(astNode)
+    while eval.currentLinePos < eval.AST.len:
+        eval.evalLine(eval.AST[eval.currentLinePos])
