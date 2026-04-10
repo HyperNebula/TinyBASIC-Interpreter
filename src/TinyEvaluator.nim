@@ -1,26 +1,26 @@
 import types/ASTNode
+import std/tables, std/strutils
 
 type
     Evaluator* = object
         AST: seq[ASTNode]
         currentLinePos: int = 0
-        varList: seq[tuple[name: char, value: int]]
+        varList = initTable[char, int]()
+        returnStack: seq[int]
 
 proc setAST*(eval: var Evaluator, ast: seq[ASTNode]) =
     eval.AST = ast
     eval.currentLinePos = 0
-    eval.varList = @[]
+    eval.varList = initTable[char, int]()
+    eval.returnStack = @[]
 
 proc evalVar(eval: var Evaluator, astNode: ASTNode): int =
-    for varT in eval.varList:
-        if varT.name == astNode.VARname:
-            return varT.value
-    echo "ERROR"
+    return eval.varList[astNode.VARname]
 
 proc evalNumber(eval: var Evaluator, astNode: ASTNode): int =
     return astNode.INTvalue
 
-proc evalSring(eval: var Evaluator, astNode: ASTNode): string =
+proc evalString(eval: var Evaluator, astNode: ASTNode): string =
     return astNode.STRvalue
 
 proc evalEXPR(eval: var Evaluator, astNode: ASTNode): int
@@ -62,7 +62,7 @@ proc evalEXPR(eval: var Evaluator, astNode: ASTNode): int =
 proc evalEXPRlist(eval: var Evaluator, astNodeList: seq[ASTNode]): seq[string] =
     for expr in astNodeList:
         if expr.nodeKind == nodeSTRING:
-            result.add eval.evalSring(expr)
+            result.add eval.evalString(expr)
         else:
             result.add($eval.evalEXPR(expr))
 
@@ -70,8 +70,6 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
     case astNode.nodeKind:
     of nodePRINT:
         echo "PRINT: " & $eval.evalEXPRlist(astNode.EXPRlist)
-
-        eval.currentLinePos += 1
     of nodeIF:
         case astNode.condRELOP:
         of opLESS:
@@ -94,11 +92,32 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
                 eval.evalLine(astNode.condStatement)
         else:
             echo "ERROR: Unknown RELOP"
-
-        eval.currentLinePos += 1
-
     of nodeGOTO:
-        eval.currentLinePos = eval.evalEXPR(astNode.goEXPR) - 1
+        eval.currentLinePos = eval.evalEXPR(astNode.goEXPR) - 2
+    of nodeGOSUB:
+        eval.returnStack.add(eval.currentLinePos)
+        eval.currentLinePos = eval.evalEXPR(astNode.goEXPR) - 2
+    of nodeRETURN:
+        if eval.returnStack.len > 0:
+            eval.currentLinePos = eval.returnStack.pop()
+    of nodeLET:
+        eval.varList[astNode.letVAR.VARname] = eval.evalEXPR(astNode.letEXPR)
+    of nodeINPUT:
+        for tempVar in astNode.VARlist:
+            var varVal = ""
+            while (isDigit(varVal)):
+                stdout.write("? ")
+                varVal = readLine(stdin)
+                parseInt(varVal)
+
+
+
+            eval.varList[tempVar.VARname] =
+
+    of nodeEOL:
+        discard
+    of nodeEND:
+        eval.currentLinePos = eval.AST.len
 
     else:
         echo "ERROR: Unknown token"
@@ -107,3 +126,4 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
 proc eval*(eval: var Evaluator) =
     while eval.currentLinePos < eval.AST.len:
         eval.evalLine(eval.AST[eval.currentLinePos])
+        eval.currentLinePos += 1
