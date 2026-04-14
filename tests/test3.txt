@@ -1,1 +1,11 @@
 PRINT 1, 1+2, "CAT"
+IF 6 <= 5+1 THEN PRINT "YAY!"
+RETURN
+
+GOSUB 1
+LET A = 5-1
+PRINT A, A + 1
+
+INPUT A, B, C
+
+PRINT B + C

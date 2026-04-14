@@ -14,6 +14,13 @@ proc setAST*(eval: var Evaluator, ast: seq[ASTNode]) =
     eval.varList = initTable[char, int]()
     eval.returnStack = @[]
 
+proc isInt(input: string): bool =
+    try:
+        discard parseInt(input)
+        return true
+    except ValueError:
+        return false
+
 proc evalVar(eval: var Evaluator, astNode: ASTNode): int =
     return eval.varList[astNode.VARname]
 
@@ -105,14 +112,11 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
     of nodeINPUT:
         for tempVar in astNode.VARlist:
             var varVal = ""
-            while (isDigit(varVal)):
+            while (not isInt(varVal)):
                 stdout.write("? ")
                 varVal = readLine(stdin)
-                parseInt(varVal)
 
-
-
-            eval.varList[tempVar.VARname] =
+            eval.varList[tempVar.VARname] = parseInt(varVal)
 
     of nodeEOL:
         discard
