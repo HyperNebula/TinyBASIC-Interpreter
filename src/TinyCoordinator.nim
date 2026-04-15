@@ -1,4 +1,5 @@
 import TinyLexer, TinyParser, TinyEvaluator, types/Token, types/ASTNode
+import std/strutils
 
 var
     lexer: TinyLexer.Lexer = TinyLexer.Lexer()
@@ -36,11 +37,19 @@ proc runFile*(fileName: string) =
         quit(65)
 
 proc runLine*() =
+    var commandStored: string = ""
     while (true):
         stdout.write("> ")
         let source = readLine(stdin)
 
-        if (source == "" or source == "exit"):
+        case source.toLowerAscii:
+        of "exit":
             break
-
-        run(source & $'\n')
+        of "clear":
+            commandStored = ""
+        of "list":
+            echo $commandStored
+        of "run":
+            run(commandStored)
+        else:
+            commandStored.add source & $'\n'
