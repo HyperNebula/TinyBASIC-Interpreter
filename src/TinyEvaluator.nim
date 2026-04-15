@@ -122,7 +122,10 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
         discard
     of nodeEND:
         eval.currentLinePos = eval.AST.len
-
+    of nodeRUN:
+        eval.currentLinePos = 0
+    of nodeLIST:
+        echo $eval.AST
     else:
         echo "ERROR: Unknown token"
 
