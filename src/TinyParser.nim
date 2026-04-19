@@ -15,6 +15,7 @@ proc setTokenList*(parser: var Parser, tokens: seq[Token]) =
     parser.tokens = tokens
     parser.currentPos = 0
     parser.errorBag = @[]
+    parser.AST = @[]
 
 proc peek(parser: Parser): Token =
     if parser.currentPos >= parser.tokens.len:

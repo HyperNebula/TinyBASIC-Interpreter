@@ -14,6 +14,9 @@ proc setAST*(eval: var Evaluator, ast: seq[ASTNode]) =
     eval.varList = initTable[char, int]()
     eval.returnStack = @[]
 
+    for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        eval.varList[letter] = 0
+
 proc isInt(input: string): bool =
     try:
         discard parseInt(input)
@@ -76,7 +79,8 @@ proc evalEXPRlist(eval: var Evaluator, astNodeList: seq[ASTNode]): seq[string] =
 proc evalLine(eval: var Evaluator, astNode: ASTNode) =
     case astNode.nodeKind:
     of nodePRINT:
-        echo "PRINT: " & $eval.evalEXPRlist(astNode.EXPRlist)
+        for expr in eval.evalEXPRlist(astNode.EXPRlist):
+            echo $expr
     of nodeIF:
         case astNode.condRELOP:
         of opLESS:
