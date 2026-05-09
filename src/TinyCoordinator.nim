@@ -24,7 +24,7 @@ proc run(source: string) =
     evaluator.setAST(@[])
 
 
-proc runFile*(fileName: string) {.exportc.} =
+proc runFile*(fileName: string) =
     run(fileName)
 
 proc runLine*(commandStored: var string, source: string) =
