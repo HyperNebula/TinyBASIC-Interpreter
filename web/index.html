@@ -3,42 +3,14 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>TINY BASIC Interpreter</title>
-        <style>
-            body {
-                font-family: sans-serif;
-                max-width: 800px;
-                margin: 2rem auto;
-            }
-            textarea {
-                width: 100%;
-                height: 200px;
-                font-family: monospace;
-                font-size: 16px;
-                padding: 10px;
-            }
-            button {
-                padding: 10px 20px;
-                font-size: 16px;
-                margin: 10px 0;
-                cursor: pointer;
-            }
-            pre {
-                background: #1e1e1e;
-                color: #00ff00;
-                padding: 15px;
-                min-height: 100px;
-                overflow-x: auto;
-            }
-        </style>
+        <title>TinyBASIC Interpreter</title>
+
+        <link rel="stylesheet" href="style.css" />
     </head>
     <body>
-        <h1>Nim TINY BASIC Interpreter</h1>
+        <h1>TinyBASIC Interpreter</h1>
 
-        <textarea id="codeInput">
-            PRINT "HELLO WORLD"
-            GOTO 10
-        </textarea>
+        <textarea id="codeInput"> </textarea>
         <br />
         <button id="runButton">Run Code</button>
 
@@ -46,7 +18,7 @@
         <pre id="outputConsole">Ready...</pre>
 
         <!-- include the compiled JS code -->
-        <script src="interpreter.js"></script>
+        <script src="tinybasic.js"></script>
 
         <script>
             const originalConsoleLog = console.log;
