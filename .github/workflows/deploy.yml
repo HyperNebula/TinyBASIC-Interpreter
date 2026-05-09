@@ -31,7 +31,8 @@ jobs:
         run: |
           mkdir -p dist
           
-          cp web/index.html dist/ 
+          cp web/index.html dist/
+          cp web/style.css dist/
           
           nim js -d:release --o:dist/tinybasic.js src/TinyCoordinator.nim
 
