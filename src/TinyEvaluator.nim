@@ -24,6 +24,20 @@ proc isInt(input: string): bool =
     except ValueError:
         return false
 
+
+when defined(js):
+    proc jsPrompt(message: cstring, default: cstring = ""): cstring {.importc: "prompt", nodecl.}
+
+proc getUserInput(promptMsg: string): string =
+    when defined(js):
+        let res = jsPrompt(promptMsg.cstring)
+        if res.isNil:
+            return ""
+        return $res
+    else:
+        stdout.write(promptMsg)
+        return readLine(stdin)
+
 proc evalVar(eval: var Evaluator, astNode: ASTNode): int =
     return eval.varList[astNode.VARname]
 
@@ -117,8 +131,7 @@ proc evalLine(eval: var Evaluator, astNode: ASTNode) =
         for tempVar in astNode.VARlist:
             var varVal = ""
             while (not isInt(varVal)):
-                stdout.write("? ")
-                varVal = readLine(stdin)
+                varVal = getUserInput("? ")
 
             eval.varList[tempVar.VARname] = parseInt(varVal)
 
