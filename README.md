@@ -2,7 +2,7 @@
 
 A lightweight, educational implementation of a TinyBASIC interpreter written in [Nim](https://nim-lang.org/).
 
-This project was built from scratch and features a complete interpretation pipeline, including a custom lexer, parser, and evaluator to execute TinyBASIC code. It supports both a file-execution mode and an interactive REPL (Read-Eval-Print Loop).
+This project was built from scratch and features a complete interpretation pipeline, including a custom lexer, parser, and evaluator to execute TinyBASIC code. It supports a file-execution mode, an interactive terminal REPL (Read-Eval-Print Loop), and a live web-based playground.
 
 ## Features
 
@@ -11,6 +11,13 @@ This project was built from scratch and features a complete interpretation pipel
 * **Interactive REPL:** Write and evaluate scode line-by-line interactively in the terminal.
 * **File Execution:** Run existing TinyBASIC scripts directly.
 * **Error Handling:** Displays syntax and evaluation errors to the user gracefully.
+* **Web Playground:** Write and run TinyBASIC code directly in your browser without any local setup.
+
+## Web Version
+
+Want to try it out right away? You don't need to install anything or compile the code. You can write and execute your TinyBASIC scripts directly in your browser here: 
+
+**[Try the TinyBASIC Web Interpreter](https://hypernebula.github.io/TinyBASIC-Interpreter/)**
 
 ## Prerequisites
 
@@ -22,7 +29,13 @@ To compile and run this project, you will need the Nim compiler installed on you
 You can compile the project using the standard Nim compiler:
 
 ```bash
-nim c -d:release TinyBasic.nim
+nim c -d:release .\cli\TinyBASIC.nim
+```
+
+If you want to compile to JavaScript for your own website, you can run the following:
+
+```bash
+nim js -o:.\web\tinybasic.js -d:release .\web\TinyBasicJS.nim
 ```
 
 ## Usage
