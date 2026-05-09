@@ -12,8 +12,6 @@
             <h1>TinyBASIC Interpreter</h1>
 
             <textarea id="codeInput"></textarea>
-            <h3>Standard Input (Put each input on a new line):</h3>
-            <textarea id="stdInput" placeholder="Enter inputs here..."></textarea>
             <br />
             <button id="runButton">Run Code</button>
             <button id="stopButton" style="display: none;">Stop Execution</button>
@@ -55,8 +53,6 @@
 
                 runButton.addEventListener("click", () => {
                     const code = document.getElementById("codeInput").value;
-                    const inputs = document.getElementById("stdInput").value;
-                    
                     outputConsole.textContent = "--- Running... ---\n";
                     
                     runButton.style.display = "none";
@@ -64,7 +60,7 @@
 
                     initWorker();
 
-                    worker.postMessage({ type: 'run', code: code, inputs: inputs });
+                    worker.postMessage({ type: 'run', code: code });
                 });
 
                 stopButton.addEventListener("click", () => {

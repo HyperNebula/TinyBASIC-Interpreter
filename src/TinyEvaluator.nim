@@ -1,6 +1,5 @@
 import types/ASTNode
 import std/tables, std/strutils
-import algorithm
 
 type
     Evaluator* = object
@@ -25,23 +24,16 @@ proc isInt(input: string): bool =
     except ValueError:
         return false
 
-var inputQueue: seq[string] = @[]
 
-proc loadInputs(inputs: cstring) {.exportc.} =
-    let inputStr = $inputs
-    inputQueue = inputStr.split("\n")
-
-    inputQueue.reverse()
+when defined(js):
+    proc jsPrompt(message: cstring, default: cstring = ""): cstring {.importc: "prompt", nodecl.}
 
 proc getUserInput(promptMsg: string): string =
     when defined(js):
-        echo promptMsg
-
-        if inputQueue.len > 0:
-            return inputQueue.pop()
-        else:
-            echo "Error: Program requested input, but no more inputs were provided."
+        let res = jsPrompt(promptMsg.cstring)
+        if res.isNil:
             return ""
+        return $res
     else:
         stdout.write(promptMsg)
         return readLine(stdin)
