@@ -16,7 +16,7 @@ proc run(source: string) =
     if (parser.hasError()):
         echo "\nERRORS:"
         parser.printERRORS()
-        quit(65)
+        return
 
     evaluator.setAST(ast)
     evaluator.eval()
@@ -30,7 +30,12 @@ proc runFile*(fileName: string) {.exportc.} =
 proc runLine*(commandStored: var string, source: string) =
     case source.toLowerAscii:
     of "exit":
-        quit(65)
+        when defined(js):
+            commandStored = ""
+            echo "Session terminated."
+            return
+        else:
+            quit(0)
     of "clear":
         commandStored = ""
     of "list":
