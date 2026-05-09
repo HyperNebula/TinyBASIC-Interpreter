@@ -11,43 +11,65 @@
         <div class="app-card">
             <h1>TinyBASIC Interpreter</h1>
 
-            <textarea id="codeInput"> </textarea>
+            <textarea id="codeInput"></textarea>
             <br />
             <button id="runButton">Run Code</button>
-
+            <button id="stopButton" style="display: none;">Stop Execution</button>
+            
             <h2>Output:</h2>
             <pre id="outputConsole">Ready...</pre>
 
-            <!-- include the compiled JS code -->
-            <script src="tinybasic.js"></script>
-
             <script>
-                const originalConsoleLog = console.log;
                 const outputConsole = document.getElementById("outputConsole");
+                const runButton = document.getElementById("runButton");
+                const stopButton = document.getElementById("stopButton");
+                
+                let worker;
 
-                console.log = function (...args) {
-                    const message = args.map((arg) => String(arg)).join(" ");
-                    outputConsole.textContent += message + "\n";
-                    originalConsoleLog.apply(console, args);
-                };
+                function initWorker() {
+                    if (worker) {
+                        worker.terminate();
+                    }
+                    
+                    worker = new Worker('worker.js');
 
-                document
-                    .getElementById("runButton")
-                    .addEventListener("click", () => {
-                        const code = document.getElementById("codeInput").value;
-
-                        outputConsole.textContent = "Running...\n";
-
-                        try {
-                            runBasic(code);
-
-                            outputConsole.textContent +=
-                                "\n--- Execution Complete ---";
-                        } catch (error) {
-                            outputConsole.textContent +=
-                                "\nFatal Error: " + error;
+                    worker.onmessage = function(e) {
+                        if (e.data.type === 'output') {
+                            outputConsole.textContent += e.data.text + "\n";
+                        } else if (e.data.type === 'complete') {
+                            outputConsole.textContent += "\n--- Execution Complete ---";
+                            resetButtons();
+                        } else if (e.data.type === 'error') {
+                            outputConsole.textContent += "\nFatal Error: " + e.data.text;
+                            resetButtons();
                         }
-                    });
+                    };
+                }
+
+                function resetButtons() {
+                    runButton.style.display = "inline-block";
+                    stopButton.style.display = "none";
+                }
+
+                runButton.addEventListener("click", () => {
+                    const code = document.getElementById("codeInput").value;
+                    outputConsole.textContent = "--- Running... ---\n";
+                    
+                    runButton.style.display = "none";
+                    stopButton.style.display = "inline-block";
+
+                    initWorker();
+
+                    worker.postMessage({ type: 'run', code: code });
+                });
+
+                stopButton.addEventListener("click", () => {
+                    if (worker) {
+                        worker.terminate();
+                        outputConsole.textContent += "\n--- Execution Terminated by User ---";
+                        resetButtons();
+                    }
+                });
             </script>
         </div>
 
