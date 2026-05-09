@@ -27,22 +27,12 @@ jobs:
                   path: "nim"
                   version: "version-2-2"
 
-<<<<<<< HEAD
             - name: Build JS and Prepare Files
               run: |
                   mkdir -p dist
-=======
-      - name: Build JS and Prepare Files
-        run: |
-          mkdir -p dist
-          
-          cp web/index.html dist/
-          cp web/style.css dist/
-          
-          nim js -d:release --o:dist/tinybasic.js src/TinyCoordinator.nim
->>>>>>> af1d415c1aa61408a9f1b6de4d407816ff5f1cb4
 
                   cp web/index.html dist/
+                  cp web/style.css dist/
 
                   nim js -d:release -o:dist/tinybasic.js web/TinyBasicJS.nim
 
