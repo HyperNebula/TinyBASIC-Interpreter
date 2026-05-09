@@ -17,7 +17,6 @@ proc run(source: string) =
         echo "\nERRORS:"
         parser.printERRORS()
         quit(65)
-        return
 
     evaluator.setAST(ast)
     evaluator.eval()
@@ -25,38 +24,33 @@ proc run(source: string) =
     evaluator.setAST(@[])
 
 
-proc runFile*(fileName: string) =
-    run(readFile(fileName))
+proc runFile*(fileName: string) {.exportc.} =
+    run(fileName)
 
-proc runLine*() =
-    var commandStored: string = ""
-    while (true):
-        stdout.write("> ")
-        let source = readLine(stdin)
+proc runLine*(commandStored: var string, source: string) =
+    case source.toLowerAscii:
+    of "exit":
+        quit(65)
+    of "clear":
+        commandStored = ""
+    of "list":
+        echo commandStored
+    of "run":
+        run(commandStored)
+        commandStored = ""
+    else:
+        var
+            tempCommandStored = commandStored & source & $'\n'
+            TEMPlexer: TinyLexer.Lexer = TinyLexer.Lexer()
+            TEMPparser: TinyParser.Parser = TinyParser.Parser()
 
-        case source.toLowerAscii:
-        of "exit":
-            break
-        of "clear":
-            commandStored = ""
-        of "list":
-            echo commandStored
-        of "run":
-            run(commandStored)
-            commandStored = ""
+        TEMPlexer.setSource(tempCommandStored)
+        var tokens: seq[Token] = TEMPlexer.scanTokens()
+
+        TEMPparser.setTokenList(tokens)
+        discard TEMPparser.parseTokens()
+
+        if (TEMPparser.hasError()):
+            TEMPparser.printERRORS()
         else:
-            var
-                tempCommandStored = commandStored & source & $'\n'
-                TEMPlexer: TinyLexer.Lexer = TinyLexer.Lexer()
-                TEMPparser: TinyParser.Parser = TinyParser.Parser()
-
-            TEMPlexer.setSource(tempCommandStored)
-            var tokens: seq[Token] = TEMPlexer.scanTokens()
-
-            TEMPparser.setTokenList(tokens)
-            discard TEMPparser.parseTokens()
-
-            if (TEMPparser.hasError()):
-                TEMPparser.printERRORS()
-            else:
-                commandStored.add source & $'\n'
+            commandStored.add source & $'\n'
