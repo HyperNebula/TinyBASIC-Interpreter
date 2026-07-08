@@ -55,6 +55,17 @@ You can evaluate scripts directly by passing a file path to the interpreter:
 ./TinyBasic your_script.txt
 ```
 
+## Supported TinyBASIC Commands
+When writing your scripts or entering lines into the REPL, the interpreter supports the standard [TinyBASIC instruction set](https://en.wikipedia.org/wiki/Tiny_BASIC#Formal_grammar):
+* `PRINT`: Outputs strings, variables, or the results of evaluated expressions to the console.
+* `LET`: Assigns a calculated value or expression to a variable (e.g., `LET A = 10 + 5`).
+* `INPUT`: Prompts the user to enter a value and assigns it to a specified variable.
+* `IF ... THEN`: Evaluates a condition and executes the subsequent statement only if the condition is true.
+* `GOTO`: Jumps execution to a specified line number.
+* `GOSUB`: Jumps to a subroutine at a specified line number, saving the current location.
+* `RETURN`: Returns execution from a subroutine back to the line immediately following the last `GOSUB`.
+* `END`: Immediately terminates the execution of the program.
+
 ## Architecture
 
 * `TinyLexer`: Scans the raw source string and breaks it down into a sequence of Tokens.
